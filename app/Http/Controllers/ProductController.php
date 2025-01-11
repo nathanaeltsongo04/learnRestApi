@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
+use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -18,17 +21,11 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric',
-        ]);
+        $product = Product::create($request->validate());
 
-        $product = Product::create($validated);
-
-        return response()->json($product, 201);
+        return response()->json(new ProductResource($product, 201));
     }
 
     /**
@@ -46,20 +43,14 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateProductRequest $request, string $id)
     {
         $product = Product::find($id);
         if (!$product) {
             return response()->json(['message' => 'Produit non trouvé'], 404);
         }
 
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'sometimes|numeric',
-        ]);
-
-        $product->update($validated);
+        $product->update($request->validated());
 
         return response()->json($product, 200);
     }
